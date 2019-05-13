@@ -1,3 +1,5 @@
+import os, time
+from copy import deepcopy
 
 #The universe of the Game of Life is an infinite two-dimensional orthogonal grid of square cells,
 # each of which is in one of two possible states, alive or dead. Every cell interacts with its
@@ -56,13 +58,10 @@ seed = """
 --------------------------------------------------------------------------
 """
 
+# --------x-x----------
 seedSmall = """---------------------
----------------------
----------------------
 --------x-x----------
 ---------x-----------
----------------------
----------------------
 ---------------------"""
 
 #print(seed)
@@ -71,8 +70,8 @@ seedSmall = """---------------------
 # for each line in seed, assign each character to a list
 # split on characters, split on line breaks
 
-__alive__ = True
-__dead__ = False
+__alive__ = "x"
+__dead__ = "-"
 world = []
 # line = []
 # linenumber = 1
@@ -85,9 +84,14 @@ def main():
 	# global cellnumber
 
 	seedTheWorld()
-	print("world size: {} x {}".format(len(world), len(world[0])))
+	print("\nworld dimensions: {} x {}".format(len(world), len(world[0])))
 	# print(world)
-	runTheWorld()
+	alive = 1
+	while alive > 0:
+		alive = runTheWorld()
+		time.sleep(1)
+		os.system("clear")
+
 
 	# TODO: store the coordinates of every living cell
 
@@ -118,23 +122,28 @@ def main():
 	# 		cellnumber += 1
 
 def runTheWorld():
-	newWorld = world
+	newWorld = deepcopy(world)
+	totalLiving = 0
 	for linenumber, line in enumerate(world):
 		for cellnumber, cellstatus in enumerate(line):
+			if cellstatus == __alive__:
+				totalLiving += 1
 			newStatus = evaluateCell(linenumber, cellnumber, cellstatus)
 			# write results to newWorld
 			newWorld[linenumber][cellnumber] = newStatus
+			print(newStatus, end='')
+		print()
 
-	# when done, assign newWorld to world (then we start over)
-	print(newWorld)
+	# world = deepcopy(newWorld)
+	return totalLiving
 
 # def evaluateCell(line, cell):
 def evaluateCell(linenumber, cellnumber, cellstatus):
 	surroundingCount = countSurroundingCells(linenumber, cellnumber)
-	print("line#:{0}, cell#:{1}, status:{2}".format(linenumber, cellnumber, cellstatus))
-	print("surrounding cell count: {}".format(surroundingCount))
-	if cellstatus:
-		print("alive")
+	# print("surrounding cell count: {}".format(surroundingCount))
+	# print("line#:{0}, cell#:{1}, status:{2}, surroundingCount: {3}".format(linenumber, cellnumber, cellstatus, surroundingCount))
+	# print("cellstatus: {}, __alive__: {}, __dead__: {}, cell is alive: {}".format(cellstatus, __alive__, __dead__, cellstatus == __alive__))
+	if cellstatus == __alive__:
 		# - Any live cell with fewer than two live neighbours dies, as if caused by under-population.
 		if surroundingCount < 2:
 			return __dead__
@@ -146,11 +155,10 @@ def evaluateCell(linenumber, cellnumber, cellstatus):
 			return __dead__
 
 	else:
-		print("dead") # - Any dead cell with exactly three live neighbours becomes a live cell
+		# - Any dead cell with exactly three live neighbours becomes a live cell
 		# count surrounding cells
 		# if count == 3, cell becomes alive
 		if surroundingCount == 3:
-			print("this cell should become alive")
 			return __alive__
 		else:
 			return __dead__
@@ -164,24 +172,30 @@ def countSurroundingCells(linenumber, cellnumber):
 	# if cell is at len(line), there is no need to check right
 
 	numberOfLivingCells = 0
-	if linenumber > 0 and cellnumber > 0 and world[linenumber-1][cellnumber-1]:
-		numberOfLivingCells += 1
-	if linenumber > 0 and world[linenumber-1][cellnumber]:
-		numberOfLivingCells += 1
-	if linenumber > 0 and cellnumber < len(world[linenumber])-1 and world[linenumber-1][cellnumber+1]:
+	if linenumber > 0 and cellnumber > 0 and world[linenumber-1][cellnumber-1] == "x":
 		numberOfLivingCells += 1
 
-	if cellnumber > 0 and world[linenumber][cellnumber-1]:
-		numberOfLivingCells += 1
-	if cellnumber < len(world[linenumber])-1 and world[linenumber][cellnumber+1]:
+	if linenumber > 0 and world[linenumber-1][cellnumber] == "x":
 		numberOfLivingCells += 1
 
-	if linenumber < len(world)-1 and cellnumber > 0 and world[linenumber+1][cellnumber-1]:
+	if linenumber > 0 and cellnumber < len(world[linenumber])-1 and world[linenumber-1][cellnumber+1] == "x":
 		numberOfLivingCells += 1
-	if linenumber < len(world)-1 and world[linenumber+1][cellnumber]:
+
+	if cellnumber > 0 and world[linenumber][cellnumber-1] == "x":
 		numberOfLivingCells += 1
-	if linenumber < len(world)-1 and cellnumber < len(world[linenumber])-1 and world[linenumber+1][cellnumber+1]:
+
+	if cellnumber < len(world[linenumber])-1 and world[linenumber][cellnumber+1] == "x":
 		numberOfLivingCells += 1
+
+	if linenumber < len(world)-1 and cellnumber > 0 and world[linenumber+1][cellnumber-1] == "x":
+		numberOfLivingCells += 1
+
+	if linenumber < len(world)-1 and world[linenumber+1][cellnumber] == "x":
+		numberOfLivingCells += 1
+
+	if linenumber < len(world)-1 and cellnumber < len(world[linenumber])-1 and world[linenumber+1][cellnumber+1] == "x":
+		numberOfLivingCells += 1
+
 	# topleft = linenumber-1, cellnumber-1
 	# topmiddle = linenumber-1, cellnumber
 	# topright = linenumber-1, cellnumber+1
@@ -190,29 +204,22 @@ def countSurroundingCells(linenumber, cellnumber):
 	# bottomleft = linenumber+1, cellnumber-1
 	# bottommiddle = linenumber+1, cellnumber
 	# bottomright = linenumber+1, cellnumber+1
-
+	# print("{}:{} = world[{}][{}]".format(linenumber, cellnumber, linenumber, cellnumber-1))
 	return numberOfLivingCells
 
 
 def seedTheWorld():
 	line = []
-
-	for cell in seedSmall:
+	print("seedsize:", len(seedSmall))
+	for index, cell in enumerate(seedSmall):
 		print(cell, end='')
 		if cell == '\n':
 			world.append(line)
 			line = []
 		else:
-			currentCellStatus = status(cell)
-			line.append(currentCellStatus)
+			line.append(cell)
+	world.append(line) # get the last line
 
-def status(cell):
-	if cell == '-':
-		return __dead__
-	else:
-		return __alive__
-
-# os.system(clear) # clear the screen and redraw
 
 if __name__ == '__main__':
 	main()
