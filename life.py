@@ -17,8 +17,7 @@ from copy import deepcopy
 # other words, each generation is a pure function of the preceding one)
 
 
-seed = """
---------------------------------------------------------------------------
+seedDefault = """--------------------------------------------------------------------------
 --------------------------------------------------------------------------
 --------------------------------------------------------------------------
 --------------------------------------------------------------------------
@@ -55,8 +54,7 @@ seed = """
 --------------------------------------------------------------------------
 --------------------------------------------------------------------------
 --------------------------------------------------------------------------
---------------------------------------------------------------------------
-"""
+--------------------------------------------------------------------------"""
 
 # --------x-x----------
 seedSmall = """---------------------
@@ -64,64 +62,30 @@ seedSmall = """---------------------
 ---------x-----------
 ---------------------"""
 
-#print(seed)
-
-# storage structures: list of lists, dict, object
-# for each line in seed, assign each character to a list
-# split on characters, split on line breaks
 
 __alive__ = "x"
 __dead__ = "-"
 world = []
-# line = []
-# linenumber = 1
-# cellnumber = 1
 
 def main():
-	# global cell
-	# global line
-	# global linenumber
-	# global cellnumber
-
-	seedTheWorld()
-	print("\nworld dimensions: {} x {}".format(len(world), len(world[0])))
-	# print(world)
+	seed = acquireSeed()
+	seedTheWorld(seed)
+	print("\nseedsize:", len(seed))	
+	print("world dimensions: {} x {}".format(len(world), len(world[0])))
+	# TODO: refresh only the world map, not the whole screen, if possible
+	os.system("clear")
+	lifeCycle = 1
 	alive = 1
 	while alive > 0:
+		# TODO: watch for lack of change, if nothing changes for a couple of cycles, end the program
+		print("Current life cycle: {}, number of living: {}".format(lifeCycle, alive))
 		alive = runTheWorld()
 		time.sleep(1)
 		os.system("clear")
-
-
-	# TODO: store the coordinates of every living cell
-
-# we could store coordinates for every single cell, or we could only store coordinates for cells that are alive.
-# if we just keep a list of live cells, we could check current cell coordinates against the cells in the list
-
-# current cell coordinates: current position (line number, column number)
-# coordinate list = mapOfTheLiving={7:[14,15],8:[13]}
-	# current cell = line 7, cell 14
-	# are any alive in line 6 or 8?
-
-	# TODO: loop through the world until every cell is dead
-	# TODO: clear the screen and print each iteration of the world
-	# TODO: count every iteration
-	# TODO: count how many are alive in each iteration
-
-	# for cell in seedSmall:
-	# 	# evaluateCell(linenumber, cellnumber)
-	# 	status = evaluateCell(cell)
-	# 	print(cell, end='')
-	# 	if cell == '\n':
-	# 		world.append(line)
-	# 		line = []
-	# 		linenumber += 1
-	# 		cellnumber = 1
-	# 	else:
-	# 		line.append({cellnumber:status})
-	# 		cellnumber += 1
+		lifeCycle += 1
 
 def runTheWorld():
+	global world
 	newWorld = deepcopy(world)
 	totalLiving = 0
 	for linenumber, line in enumerate(world):
@@ -129,48 +93,30 @@ def runTheWorld():
 			if cellstatus == __alive__:
 				totalLiving += 1
 			newStatus = evaluateCell(linenumber, cellnumber, cellstatus)
-			# write results to newWorld
 			newWorld[linenumber][cellnumber] = newStatus
 			print(newStatus, end='')
 		print()
 
-	# world = deepcopy(newWorld)
+	world = deepcopy(newWorld)
 	return totalLiving
 
-# def evaluateCell(line, cell):
 def evaluateCell(linenumber, cellnumber, cellstatus):
 	surroundingCount = countSurroundingCells(linenumber, cellnumber)
-	# print("surrounding cell count: {}".format(surroundingCount))
-	# print("line#:{0}, cell#:{1}, status:{2}, surroundingCount: {3}".format(linenumber, cellnumber, cellstatus, surroundingCount))
-	# print("cellstatus: {}, __alive__: {}, __dead__: {}, cell is alive: {}".format(cellstatus, __alive__, __dead__, cellstatus == __alive__))
 	if cellstatus == __alive__:
-		# - Any live cell with fewer than two live neighbours dies, as if caused by under-population.
 		if surroundingCount < 2:
 			return __dead__
-		# - Any live cell with two or three live neighbours lives on to the next generation.
 		elif surroundingCount == 2 or surroundingCount == 3:
 			return __alive__
-		# - Any live cell with more than three live neighbours dies, as if by overcrowding.
 		elif surroundingCount > 3:
 			return __dead__
 
 	else:
-		# - Any dead cell with exactly three live neighbours becomes a live cell
-		# count surrounding cells
-		# if count == 3, cell becomes alive
 		if surroundingCount == 3:
 			return __alive__
 		else:
 			return __dead__
 
 def countSurroundingCells(linenumber, cellnumber):
-	# count living cells around this cell, in other words, how many are True?
-	# first we need to test line and cell size
-	# if line is 0, there is no need to check above
-	# if line is at len(world), there is not need to check below
-	# if cell is at 0, there is no need to check left
-	# if cell is at len(line), there is no need to check right
-
 	numberOfLivingCells = 0
 	if linenumber > 0 and cellnumber > 0 and world[linenumber-1][cellnumber-1] == "x":
 		numberOfLivingCells += 1
@@ -204,14 +150,12 @@ def countSurroundingCells(linenumber, cellnumber):
 	# bottomleft = linenumber+1, cellnumber-1
 	# bottommiddle = linenumber+1, cellnumber
 	# bottomright = linenumber+1, cellnumber+1
-	# print("{}:{} = world[{}][{}]".format(linenumber, cellnumber, linenumber, cellnumber-1))
 	return numberOfLivingCells
 
 
-def seedTheWorld():
+def seedTheWorld(seed):
 	line = []
-	print("seedsize:", len(seedSmall))
-	for index, cell in enumerate(seedSmall):
+	for index, cell in enumerate(seed):
 		print(cell, end='')
 		if cell == '\n':
 			world.append(line)
@@ -221,6 +165,16 @@ def seedTheWorld():
 	world.append(line) # get the last line
 
 
+def acquireSeed():
+# TODO: read the seed from a file, if no file offered, use a default seed
+	return seedDefault
+
+
 if __name__ == '__main__':
-	main()
+	try:
+		main()
+	except (KeyboardInterrupt, SystemExit):
+		print("The End")
+		exit()
+
 
