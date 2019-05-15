@@ -1,4 +1,4 @@
-import os, time
+import os, time, sys
 from copy import deepcopy
 
 #The universe of the Game of Life is an infinite two-dimensional orthogonal grid of square cells,
@@ -162,19 +162,25 @@ def seedTheWorld(seed):
 			line = []
 		else:
 			line.append(cell)
+	time.sleep(1)
 	world.append(line) # get the last line
 
 
 def acquireSeed():
-# TODO: read the seed from a file, if no file offered, use a default seed
-	return seedDefault
+	filename = sys.argv[1:]
+	if not filename:
+		print("No filename specified, using default seed...")
+		return seedDefault
+	with open(filename[0], 'r') as seedFile:
+		seedFromFile = seedFile.read()
+	return seedFromFile
 
 
 if __name__ == '__main__':
 	try:
 		main()
 	except (KeyboardInterrupt, SystemExit):
-		print("The End")
+		print("\nThe End")
 		exit()
 
 
