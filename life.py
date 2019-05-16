@@ -77,7 +77,6 @@ def main():
 	lifeCycle = 1
 	alive = 1
 	while alive > 0:
-		# TODO: watch for lack of change, if nothing changes for a couple of cycles, end the program
 		print("Current life cycle: {}, number of living: {}".format(lifeCycle, alive))
 		alive = runTheWorld()
 		time.sleep(1)
@@ -97,6 +96,8 @@ def runTheWorld():
 			print(newStatus, end='')
 		print()
 
+	if world == newWorld:
+		return 0 # the world is not changing
 	world = deepcopy(newWorld)
 	return totalLiving
 
